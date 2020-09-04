@@ -13,7 +13,7 @@ export default class Graviton extends Mesh {
   private relativeVelocity: Vector3 = new Vector3();
   private normal: Vector3 = new Vector3();
   private vec: Vector3 = new Vector3();
-  private maxDistance: Vector3 = new Vector3(60, 40, 20);
+  private maxDistance: Vector3 = new Vector3(120, 120, 120);
   private zeroVec: Vector3 = new Vector3(0, 0, 0);
 
   constructor(element: Mesh) {
@@ -94,7 +94,7 @@ export default class Graviton extends Mesh {
     );
   }
 
-  update(objects: Graviton[], attractors: Mesh[] = [], ranges: Dimensions) {
+  update(objects: Graviton[], attractors: Mesh[] = [], ranges: Dimensions, earth: Mesh) {
     let delta = this.clock.getDelta();
 
     if (delta > 1) return;
@@ -110,9 +110,12 @@ export default class Graviton extends Mesh {
     }
 
     for (var idx = 0; idx < attractors.length; idx++) {
-      this.handleGravity(attractors[idx], delta * 0.01);
+      this.handleGravity(attractors[idx], delta * 0.05);
       this.handleCollision(attractors[idx]);
     }
+
+    this.handleGravity(earth, delta * 0.7);
+    this.handleCollision(earth);
 
     // fallback to regular gravity
     if (attractors.length <= 0) {

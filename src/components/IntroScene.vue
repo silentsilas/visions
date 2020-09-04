@@ -8,14 +8,16 @@
 import { Component, Vue } from 'vue-property-decorator';
 import {
   Scene, PerspectiveCamera, WebGLRenderer, MeshBasicMaterial,
-  Mesh, DirectionalLight, Color, Clock, SphereBufferGeometry,
+  Mesh, Color, Clock, SphereBufferGeometry,
   BoxBufferGeometry,
   MeshToonMaterial,
-  SpotLight,
   PointLight,
+  DoubleSide,
+  MeshPhongMaterial,
+  Vector3,
 } from 'three';
 import Graviton from './Graviton';
-import MouseFollower from './MouseFollower';
+import KeyFollower from './KeyFollower';
 import { Dimensions } from './Interfaces';
 
 @Component
@@ -30,19 +32,17 @@ export default class IntroScene extends Vue {
 
   private renderer!: WebGLRenderer;
 
-  private roomDimensions: Dimensions = { x: 60, y: 40, z: 20 };
+  private roomDimensions: Dimensions = { x: 100, y: 100, z: 100 };
 
   private gravitons: Graviton[] = [];
 
-  private earth: MouseFollower;
-
-  private directional: DirectionalLight = new DirectionalLight(new Color(0xffffff), 0.75);
-
-  private spotLight: SpotLight = new SpotLight(new Color(0xffffff), 0.5, 100, 0.25);
+  private earth: KeyFollower;
 
   private timeElapsed = 0;
 
   private clock: Clock = new Clock();
+
+  private behindEarth: Vector3 = new Vector3(0, 10, 10);
 
   mounted() {
     this.setup();
@@ -70,20 +70,14 @@ export default class IntroScene extends Vue {
 
     this.createEarth(0);
 
-    this.spotLight.position.set(
-      0, 0, 20,
-    );
-    this.spotLight.target = this.earth;
-    this.scene.add(this.spotLight);
-
-    const pointLight = new PointLight(new Color(0xffffff), 1, 50);
+    const pointLight = new PointLight(new Color(0xffffff), 1, 500);
     this.scene.add(pointLight);
 
     for (let i = 0; i < 10; i += 1) {
       this.spawnBall();
     }
 
-    this.camera.position.z = 40;
+    this.camera.position.z = 50;
     this.camera.position.y = 0;
   }
 
@@ -97,17 +91,18 @@ export default class IntroScene extends Vue {
     const mesh = new Mesh(geometry, material);
     mesh.position.y = yPosition;
 
-    this.earth = new MouseFollower(this.container, mesh, true);
+    this.earth = new KeyFollower(this.container, mesh);
 
     this.scene.add(this.earth);
   }
 
   static createPlane(width, height, length, x, y, z) {
     const geometry = new BoxBufferGeometry(width, height, length);
-    const material = new MeshToonMaterial({
+    const material = new MeshPhongMaterial({
       color: new Color(
         0.3, 0.6, 0.9,
       ),
+      side: DoubleSide,
     });
     const mesh = new Mesh(geometry, material);
     mesh.position.set(x, y, z);
@@ -120,11 +115,13 @@ export default class IntroScene extends Vue {
     const eastWall = IntroScene.createPlane(0.1, height, length, width / 2, 0, 0);
     const roof = IntroScene.createPlane(width, 0.1, length, 0, height / 2, 0);
     const backWall = IntroScene.createPlane(width, height, 0.1, 0, 0, -length / 2);
+    const frontWall = IntroScene.createPlane(width, height, 0.1, 0, 0, length / 2);
     this.scene.add(floor);
     this.scene.add(westWall);
     this.scene.add(eastWall);
     this.scene.add(roof);
     this.scene.add(backWall);
+    this.scene.add(frontWall);
   }
 
   spawnBall() {
@@ -135,9 +132,9 @@ export default class IntroScene extends Vue {
       ),
     });
     const mesh = new Mesh(geometry, material);
-    mesh.position.x = Math.random() * this.roomDimensions.x - (this.roomDimensions.x / 2);
-    mesh.position.y = Math.random() * this.roomDimensions.y - (this.roomDimensions.y / 2);
-    mesh.position.z = Math.random() * -this.roomDimensions.z;
+    mesh.position.x = Math.random() * 20 - (20 / 2);
+    mesh.position.y = Math.random() * 20 - (20 / 2);
+    mesh.position.z = Math.random() * -20;
 
     const ball = new Graviton(mesh);
     this.scene.add(ball);
@@ -150,11 +147,10 @@ export default class IntroScene extends Vue {
     requestAnimationFrame(this.animate);
 
     this.gravitons.forEach((el: Graviton) => {
-      el.update(this.gravitons, [...this.gravitons, this.earth], this.roomDimensions);
+      el.update(this.gravitons, [...this.gravitons], this.roomDimensions, this.earth);
     });
 
-    this.earth.update(this.roomDimensions);
-
+    this.earth.update(this.camera);
     this.renderer.render(this.scene, this.camera);
 
     // this.timeElapsed += this.clock.getDelta();
@@ -174,5 +170,6 @@ export default class IntroScene extends Vue {
 .three-canvas {
   height: 100%;
   width: 100%;
+  overflow: hidden;
 }
 </style>
