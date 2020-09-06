@@ -3,8 +3,11 @@ import { Dimensions } from './Interfaces';
 
 export default class Graviton extends Mesh {
   public radius: number = 1;
+  public gravity: number = 1;
   public debug: boolean = false;
   public attractor: Object3D;
+  public static: boolean = false;
+  public OnCollisionCallback: (object: Graviton) => void;
 
   private clock: Clock;
   private goalVelocity: Vector3 = new Vector3();
@@ -13,7 +16,7 @@ export default class Graviton extends Mesh {
   private relativeVelocity: Vector3 = new Vector3();
   private normal: Vector3 = new Vector3();
   private vec: Vector3 = new Vector3();
-  private maxDistance: Vector3 = new Vector3(120, 120, 120);
+  private maxDistance: Vector3 = new Vector3(200, 200, 200);
   private zeroVec: Vector3 = new Vector3(0, 0, 0);
 
   constructor(element: Mesh) {
@@ -22,6 +25,12 @@ export default class Graviton extends Mesh {
     this.material = element.material;
     this.position.set(element.position.x, element.position.y, element.position.z);
     this.clock = new Clock();
+  }
+
+  OnCollision(object: Graviton) {
+    if (this.OnCollisionCallback) {
+      this.OnCollisionCallback(object);
+    }
   }
 
   handleBounds(xRange: number, yRange: number, zRange: number) {
@@ -44,24 +53,25 @@ export default class Graviton extends Mesh {
     }
   }
 
-  handleCollision(object: Graviton | Mesh) {
+  handleCollision(object: Graviton) {
     if (object.id == this.id) return;
 
     let currentVelocity = this.zeroVec;
+    let objectRadius = 1;
     if (object instanceof Graviton) {
       currentVelocity = object.currentVelocity;
+      objectRadius = object.radius;
     }
 
     this.normal.copy( this.position ).sub( object.position );
     var distance = this.normal.length();
 
-    if ( distance < 2 * this.radius ) {
-
-      this.normal.multiplyScalar( 0.5 * distance - this.radius );
+    if ( distance < (objectRadius + this.radius) ) {
+      this.normal.multiplyScalar( 0.5 * (distance - ((this.radius + objectRadius))) );
 
       // push away from each other
-      this.position.sub( this.normal );
-      object.position.add( this.normal );
+      if (!this.static) this.position.sub( this.normal );
+      if (!object.static) object.position.add( this.normal );
 
       this.normal.normalize();
 
@@ -71,6 +81,9 @@ export default class Graviton extends Mesh {
 
       this.currentVelocity.sub( this.normal );
       currentVelocity.add( this.normal );
+
+      object.OnCollision(this);
+      return;
     }
   }
 
@@ -89,37 +102,29 @@ export default class Graviton extends Mesh {
     // max - current = strength of gravity
     this.goalVelocity.subVectors(this.vec, this.goalVelocity);
 
+    this.goalVelocity.clampLength(-50, 50)
+
     this.currentVelocity.add(
       this.goalVelocity.multiplyScalar(delta)
     );
   }
 
-  update(objects: Graviton[], attractors: Mesh[] = [], ranges: Dimensions, earth: Mesh) {
+  update(objects: Graviton[], ranges: Dimensions, gravity: number, speedlimit: number) {
     let delta = this.clock.getDelta();
 
     if (delta > 1) return;
-
-    this.position.add(
-      this.vec.copy(this.currentVelocity).multiplyScalar(delta)
-    );
 
     this.handleBounds(ranges.x / 2, ranges.y / 2, ranges.z / 2);
 
     for (var i = 0; i < objects.length; i++) {
       this.handleCollision(objects[i]);
+      this.handleGravity(objects[i], delta * gravity * objects[i].gravity);
     }
 
-    for (var idx = 0; idx < attractors.length; idx++) {
-      this.handleGravity(attractors[idx], delta * 0.05);
-      this.handleCollision(attractors[idx]);
-    }
-
-    this.handleGravity(earth, delta * 0.7);
-    this.handleCollision(earth);
-
-    // fallback to regular gravity
-    if (attractors.length <= 0) {
-      this.currentVelocity.y += -9.8 * delta;
+    if (!this.static) {
+      this.position.add(
+        this.vec.copy(this.currentVelocity.clampLength(-speedlimit, speedlimit)).multiplyScalar(delta * 0.1)
+      );
     }
   }
 }
