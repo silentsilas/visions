@@ -35,7 +35,6 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import Graviton from './Graviton';
-import { Dimensions } from './Interfaces';
 
 @Component
 export default class IntroScene extends Vue {
@@ -48,8 +47,6 @@ export default class IntroScene extends Vue {
   private camera!: PerspectiveCamera;
 
   private renderer!: WebGLRenderer;
-
-  private roomDimensions: Dimensions = { x: 200, y: 200, z: 200 };
 
   private gravitons: Graviton[] = [];
 
@@ -122,6 +119,8 @@ export default class IntroScene extends Vue {
 
     this.camera = new PerspectiveCamera(75,
       this.container.offsetWidth / this.container.offsetHeight, 0.1, 1000);
+    this.camera.position.z = 30;
+    this.camera.position.y = 0;
 
     this.renderer = new WebGLRenderer({ canvas: this.canvas, antialias: true });
     this.renderer.setSize(this.container.offsetWidth, this.container.offsetHeight);
@@ -129,23 +128,13 @@ export default class IntroScene extends Vue {
 
     this.createSun(0);
 
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    this.controls.target = this.sun.position;
-    this.controls.autoRotate = true;
-    this.controls.update();
+    this.addOrbitControls();
 
     this.createSkybox();
 
-    const pointLight = new PointLight(new Color(0xffffff), 1, 300);
-    this.scene.add(pointLight);
-    pointLight.parent = this.sun;
-
     for (let i = 0; i < 8; i += 1) {
-      this.spawnBall();
+      this.spawnPlanet();
     }
-
-    this.camera.position.z = 30;
-    this.camera.position.y = 0;
 
     this.addComposer();
   }
@@ -202,6 +191,11 @@ export default class IntroScene extends Vue {
     this.sun.gravity = this.sunGravity * 3;
     this.sun.static = true;
 
+    const pointLight = new PointLight(new Color(0xffffff), 1, 300);
+    this.scene.add(pointLight);
+    pointLight.parent = this.sun;
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     this.sun.OnCollisionCallback = (object: Graviton) => {
       // TODO: Implement collision sounds
     };
@@ -210,7 +204,14 @@ export default class IntroScene extends Vue {
     this.gravitons.push(this.sun);
   }
 
-  spawnBall() {
+  addOrbitControls() {
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.controls.target = this.sun.position;
+    this.controls.autoRotate = true;
+    this.controls.update();
+  }
+
+  spawnPlanet() {
     const scale = Math.random() + 0.1;
     const geometry = new SphereBufferGeometry(scale);
     const material = new MeshPhongMaterial({
@@ -235,8 +236,7 @@ export default class IntroScene extends Vue {
     requestAnimationFrame(this.animate);
 
     this.gravitons.forEach((el: Graviton) => {
-      el.update(this.gravitons, this.roomDimensions,
-        this.universalGravity, this.speedlimit);
+      el.update(this.gravitons, this.universalGravity, this.speedlimit);
     });
 
     this.composer.render();

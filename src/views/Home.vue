@@ -1,17 +1,19 @@
 <template>
   <div class="home">
-    <IntroScene class="threejs" />
+    <Scene class="threejs" />
+    <Footer />
   </div>
 </template>
 
 <script>
 // @ is an alias to /src
-import IntroScene from '@/components/IntroScene.vue';
+import Scene from '@/components/Scene.vue';
+import Footer from '@/components/Footer.vue';
 
 export default {
   name: 'Home',
   components: {
-    IntroScene,
+    Scene, Footer,
   },
 };
 </script>
