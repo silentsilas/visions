@@ -1,11 +1,11 @@
 <template>
   <div class="three-container">
     <canvas class="three-canvas" ref="canvas"></canvas>
-    <div class="controls">
+    <div class="controls-container">
       <a href="#" class="button" @click.prevent="hidingControls = !hidingControls">
         {{ hidingControls ? "Show Controls" : "Hide Controls" }}
       </a>
-      <div v-show="!hidingControls">
+      <div v-if="!hidingControls" class="controls">
         <p>Universal Speed Limit: {{ speedlimit }}</p>
         <input class="slider" type="range" min="20" max="1000" step="1" v-model="speedlimit" />
         <p>Their gravity: {{ universalGravity }}</p>
@@ -267,8 +267,8 @@ export default class IntroScene extends Vue {
   width: 100%;
   overflow: hidden;
 }
-.controls {
-  position: absolute;
+.controls-container {
+  position: fixed;
   right: 0px;
   top: 0px;
   width: 250px;
@@ -384,7 +384,7 @@ a.button:hover{
     display:block;
     margin:0.4em auto;
   }
-  .controls {
+  .controls-container {
     width: 100%;
     padding: 0px;
   }
