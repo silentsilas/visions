@@ -1,15 +1,17 @@
 <template>
   <div class="home">
     <div v-if="!begun" class="container">
-      <div class="modal noTouchie" style="top: 45%">
-        <p>Hey man, you've been acting funny.<br />
-          Are you sure you're alright?</p>
-      </div>
-      <div class="modal noTouchie" style="top: 55%;">
-        <p>{{ loading ? "One sec, lemme check" : "Yeah probably, let's do this." }}</p>
-      </div>
-      <div class="clickReminder noTouchie">
-        {{ loading ? `${soundsLoaded}/9` : "plz click" }}
+      <div class="modal-container">
+        <div class="modal noTouchie" style="top: 45%">
+          <p>Hey man, you've been acting funny.<br />
+            Are you sure you're alright?</p>
+        </div>
+        <div class="modal noTouchie" style="top: 55%;">
+          <p>{{ loading ? "One sec, lemme check" : "Yeah probably, let's do this." }}</p>
+        </div>
+        <div class="clickReminder noTouchie">
+          {{ loading ? `Loaded ${soundsLoaded}/9 thingies` : "plz click" }}
+        </div>
       </div>
     </div>
     <div>
@@ -83,15 +85,16 @@ export default {
   .modal {
     color: #efefef;
     background-color: rgba(0, 0, 0, 0.3);
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     width: 300px;
 
-    padding-left: 20px;
-    padding-right: 20px;
-    padding-bottom: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .modal-container {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
   }
   .noTouchie {
     -webkit-touch-callout: none; /* iOS Safari */
@@ -102,10 +105,6 @@ export default {
             user-select: none;
   }
   .clickReminder {
-    position: absolute;
-    top: 75%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     color: #efefef;
   }
 </style>
