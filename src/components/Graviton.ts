@@ -1,4 +1,13 @@
-import { Object3D, Vector3, Clock, Mesh, MathUtils } from 'three';
+import { Object3D, Vector3, Clock, Mesh, AudioListener, PositionalAudio, AudioLoader } from 'three';
+import * as Tone from 'tone';
+
+interface AudioBufferNodeSourceShim extends OscillatorNode {
+  buffer: any;
+  loop: any;
+  loopEnd: any;
+  loopStart: any;
+  playbackRate: any;
+}
 
 export default class Graviton extends Mesh {
   public radius: number = 1;
@@ -7,6 +16,8 @@ export default class Graviton extends Mesh {
   public attractor: Object3D;
   public static: boolean = false;
   public OnCollisionCallback: (object: Graviton) => void;
+  public oscillator: AudioBufferNodeSourceShim;
+  public sfxs: PositionalAudio[] = [];
 
   private clock: Clock;
   private goalVelocity: Vector3 = new Vector3();
@@ -17,6 +28,7 @@ export default class Graviton extends Mesh {
   private vec: Vector3 = new Vector3();
   private maxDistance: Vector3 = new Vector3(200, 200, 200);
 
+
   constructor(element: Mesh) {
     super();
     this.geometry = element.geometry;
@@ -25,9 +37,24 @@ export default class Graviton extends Mesh {
     this.clock = new Clock();
   }
 
+  setupSfx(listener: AudioListener, sounds: any[]) {
+    sounds.forEach((audioBuffer) => {
+      const sfxAudio = new PositionalAudio(listener);
+      sfxAudio.setBuffer(audioBuffer);
+      sfxAudio.setRefDistance(20);
+      this.sfxs.push(sfxAudio);
+      this.add(sfxAudio);
+    });
+  }
+
   OnCollision(object: Graviton) {
-    if (this.OnCollisionCallback) {
-      this.OnCollisionCallback(object);
+    if (object.sfxs.length > 0) {
+      const sfx = object.sfxs[Math.floor(Math.random() * object.sfxs.length)];
+      const volume = Math.min(object.currentVelocity.length(), 500) / 500;
+      if (!sfx.isPlaying) {
+        sfx.setVolume(volume / 2);
+        sfx.play();
+      }
     }
   }
 
@@ -54,7 +81,6 @@ export default class Graviton extends Mesh {
       object.currentVelocity.add( this.normal );
 
       object.OnCollision(this);
-      return;
     }
   }
 

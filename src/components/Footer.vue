@@ -1,7 +1,8 @@
 <template>
   <div class="footer">
     <a href="https://github.com/silentsilas/visions" target="_blank"><img src="@/assets/github-logo.png" class="logo" /></a>
-     Built by <a href="https://silentsilas.com/" target="_blank">Silent Silas</a>
+     Built by <a href="https://silentsilas.com/" target="_blank">Silent Silas</a><br />
+     Sound design by <a href="https://github.com/notchris" target="_blank">notchris</a>
   </div>
 </template>
 
@@ -10,24 +11,25 @@
     position: absolute;
     bottom: 0px;
     left: 50%;
-    height: 30px;
+    height: 50px;
+    width: 100vw;
     transform: translateX(-50%);
     color: #efefef;
   }
   a {
-    color: #333333;
+    color: #33ac14;
     text-decoration: none;
     &:link {
-      color: #333333;
+      color: #efefef;
     }
     &:visited {
-      color: #333333;
+      color: #efefef;
     }
     &:hover {
-      color: #EFEFEF;
+      color: #33ac14;
     }
     &:active {
-      color: #EFEFEF;
+      color: #33ac14;
     }
   }
 
