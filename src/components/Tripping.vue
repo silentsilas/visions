@@ -316,6 +316,12 @@ export default class Tripping extends TrippingProps {
   width: 100%;
   overflow: hidden;
 }
+
+.controls {
+  max-width: 250px;
+  margin: 0 auto;
+}
+
 .controls-container {
   position: fixed;
   right: 0px;
@@ -407,6 +413,13 @@ how to remove the virtical space around the range input in IE*/
   input[type=range].slider {
     margin: 0;
     /*Edge starts the margin from the thumb, not the track as other browsers do*/
+  }
+}
+
+@media all and (max-width:30em){
+  .controls-container {
+    width: 100%;
+    padding: 0px;
   }
 }
 </style>

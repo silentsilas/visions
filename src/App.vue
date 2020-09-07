@@ -50,9 +50,5 @@ a.button:hover{
     display:block;
     margin:0.4em auto;
   }
-  .controls-container {
-    width: 100%;
-    padding: 0px;
-  }
 }
 </style>
