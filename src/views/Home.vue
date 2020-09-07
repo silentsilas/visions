@@ -1,10 +1,19 @@
 <template>
   <div class="home">
-    <div v-if="begun">
-      <Tripping class="threejs" :bg="bg" :sounds="sounds" />
+    <div v-if="!begun" class="container">
+      <div class="modal noTouchie" style="top: 45%">
+        <p>Hey man, you've been acting funny.<br />
+          Are you sure you're alright?</p>
+      </div>
+      <div class="modal noTouchie" style="top: 55%;">
+        <p>{{ loading ? "One sec, lemme check" : "Yeah probably, let's do this." }}</p>
+      </div>
+      <div class="clickReminder noTouchie">
+        {{ loading ? `${soundsLoaded}/9` : "plz click" }}
+      </div>
     </div>
-    <div v-else class="container">
-      <BeginModal :onBegin="begin" :loading="loading" />
+    <div>
+      <Tripping class="threejs" :bg="bg" :sounds="sounds" />
     </div>
     <Footer />
   </div>
@@ -12,7 +21,7 @@
 
 <script>
 // @ is an alias to /src
-import BeginModal from '@/components/BeginModal.vue';
+import { EventBus } from '@/utils/EventBus';
 import Tripping from '@/components/Tripping.vue';
 import Footer from '@/components/Footer.vue';
 import PromisedLoad from '@/utils/PromisedLoad';
@@ -20,27 +29,30 @@ import PromisedLoad from '@/utils/PromisedLoad';
 export default {
   name: 'Home',
   components: {
-    Tripping, Footer, BeginModal,
+    Tripping, Footer,
   },
   async mounted() {
+    EventBus.$on('clicked', () => {
+      this.begun = true;
+    });
     try {
       this.bg = await PromisedLoad.GetAudio('/bg/loop.wav');
-      const soundPromises = [];
+      this.soundsLoaded += 1;
+
+      const promises = [];
       for (let i = 1; i < 9; i += 1) {
-        soundPromises.push(
-          PromisedLoad.GetAudio(`/sfx/boop${i}.wav`),
+        promises.push(
+          PromisedLoad.GetAudio(`/sfx/boop${i}.wav`, () => {
+            this.soundsLoaded += 1;
+          }),
         );
       }
-      this.sounds = await Promise.all(soundPromises);
+      this.sounds = await Promise.all(promises);
+      EventBus.$emit('loaded', true);
       this.loading = false;
     } catch (error) {
       console.error(error);
     }
-  },
-  methods: {
-    begin() {
-      this.begun = true;
-    },
   },
   data() {
     return {
@@ -48,6 +60,7 @@ export default {
       begun: false,
       bg: null,
       sounds: [],
+      soundsLoaded: 0,
     };
   },
 };
@@ -60,20 +73,39 @@ export default {
     overflow: hidden;
   }
   .container {
+    position: absolute;
+    left: 0px;
+    top: 0px;
     width: 100vw;
     height: 100vh;
-    background-color: #000000;
+    background-color: rgba(0,0,0, 0.7);
   }
   .modal {
     color: #efefef;
-    background-color: rgb(59, 59, 59);
+    background-color: rgba(0, 0, 0, 0.3);
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    width: 300px;
 
     padding-left: 20px;
     padding-right: 20px;
     padding-bottom: 12px;
+  }
+  .noTouchie {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none;
+  }
+  .clickReminder {
+    position: absolute;
+    top: 75%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #efefef;
   }
 </style>

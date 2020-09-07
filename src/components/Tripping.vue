@@ -37,11 +37,13 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { EventBus } from '@/utils/EventBus';
 import Graviton from './Graviton';
 
 // Define the props by using Vue's canonical way.
 const TrippingProps = Vue.extend({
   props: {
+    begun: Boolean,
     bg: AudioBuffer,
     sounds: Array,
   },
@@ -66,6 +68,8 @@ export default class Tripping extends TrippingProps {
   private renderer!: WebGLRenderer;
 
   private listener: AudioListener;
+
+  private bgAudio: PositionalAudio;
 
   private gravitons: Graviton[] = [];
 
@@ -97,7 +101,6 @@ export default class Tripping extends TrippingProps {
 
   mounted() {
     this.setup();
-    this.animate();
     this.onWindowResize = this.onWindowResize.bind(this);
     window.addEventListener('resize', this.onWindowResize, false);
   }
@@ -142,17 +145,42 @@ export default class Tripping extends TrippingProps {
     this.listener = new AudioListener();
     this.camera.add(this.listener);
 
+    this.createSkybox();
+
+    this.addComposer();
+
     this.createSun(0);
 
     this.addOrbitControls();
-
-    this.createSkybox();
-
     for (let i = 0; i < 9; i += 1) {
       this.spawnPlanet();
     }
 
-    this.addComposer();
+    this.renderUpdate();
+
+    EventBus.$on('loaded', () => {
+      this.bgAudio.setBuffer(this.bg);
+      this.bgAudio.setRefDistance(20);
+      this.bgAudio.loop = true;
+      this.OnClick = this.OnClick.bind(this);
+      window.addEventListener('touchstart', this.OnClick);
+      document.addEventListener('click', this.OnClick);
+    });
+  }
+
+  OnClick() {
+    EventBus.$emit('clicked', true);
+    window.removeEventListener('touchstart', this.OnClick);
+    document.removeEventListener('click', this.OnClick);
+    this.begin();
+  }
+
+  begin() {
+    this.bgAudio.play();
+    this.gravitons.forEach((object) => {
+      object.setupSfx(this.listener, this.sounds);
+    });
+    this.animate();
   }
 
   addComposer() {
@@ -206,21 +234,16 @@ export default class Tripping extends TrippingProps {
     this.sun.radius = 1;
     this.sun.gravity = this.sunGravity * 3;
     this.sun.static = true;
-    this.sun.setupSfx(this.listener, this.sounds);
 
     // create the PositionalAudio object (passing in the listener)
-    const bgAudio = new PositionalAudio(this.listener);
-    bgAudio.setBuffer(this.bg);
-    bgAudio.setRefDistance(20);
-    bgAudio.loop = true;
-    bgAudio.play();
+    this.bgAudio = new PositionalAudio(this.listener);
 
     const pointLight = new PointLight(new Color(0xffffff), 1, 300);
     this.scene.add(pointLight);
     pointLight.parent = this.sun;
 
     this.scene.add(this.sun);
-    this.sun.add(bgAudio);
+    this.sun.add(this.bgAudio);
     this.gravitons.push(this.sun);
   }
 
@@ -250,8 +273,6 @@ export default class Tripping extends TrippingProps {
     ball.radius = scale;
     this.scene.add(ball);
 
-    ball.setupSfx(this.listener, this.sounds);
-
     this.gravitons.push(ball);
     return ball;
   }
@@ -263,9 +284,11 @@ export default class Tripping extends TrippingProps {
       el.update(this.gravitons, this.universalGravity, this.speedlimit);
     });
 
-    this.composer.render();
     this.controls.update();
+    this.renderUpdate();
+  }
 
+  renderUpdate() {
     const skyMaterial = (this.skybox.material as MeshPhongMaterial);
     skyMaterial.color.setRGB(
       (1 + Math.sin(skyMaterial.color.r + this.skyCounter)) / 2,
@@ -273,6 +296,8 @@ export default class Tripping extends TrippingProps {
       (1 + Math.sin(skyMaterial.color.b + (this.skyCounter - 1))) / 2,
     );
     this.skyCounter += 0.01;
+
+    this.composer.render();
   }
 
   onWindowResize() {

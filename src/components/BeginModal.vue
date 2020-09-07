@@ -21,7 +21,7 @@ const BeginModalProps = Vue.extend({
 @Component
 export default class BeginModal extends BeginModalProps {
   begin() {
-    if (this.onBegin) {
+    if (this.onBegin && !this.loading) {
       this.onBegin();
     }
   }
