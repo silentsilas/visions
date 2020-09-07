@@ -38,13 +38,13 @@ export default {
       this.begun = true;
     });
     try {
-      this.bg = await PromisedLoad.GetAudio('/bg/loop.wav');
+      this.bg = await PromisedLoad.GetAudio('/bg/loop.mp3');
       this.soundsLoaded += 1;
 
       const promises = [];
       for (let i = 1; i < 9; i += 1) {
         promises.push(
-          PromisedLoad.GetAudio(`/sfx/boop${i}.wav`, () => {
+          PromisedLoad.GetAudio(`/sfx/boop${i}.mp3`, () => {
             this.soundsLoaded += 1;
           }),
         );
