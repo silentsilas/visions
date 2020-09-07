@@ -7,12 +7,12 @@
       </a>
       <div v-if="!hidingControls" class="controls">
         <p>Universal Speed Limit: {{ speedlimit }}</p>
-        <input class="slider" type="range" min="20" max="1000" step="1" v-model="speedlimit" />
+        <input class="slider" type="range" min="500" max="1000" step="1" v-model="speedlimit" />
         <p>Universal gravity: {{ universalGravity }}</p>
         <input class="slider" type="range"
-          min="0.1" max="10" step="0.1" v-model="universalGravity" />
-        <p>Sun gravity multiplier: {{ (3 * sunGravity).toFixed(1) }}</p>
-        <input class="slider" type="range" min="0" max="10" step="0.1" style="margin-bottom: 20px"
+          min="0.1" max="5" step="0.1" v-model="universalGravity" />
+        <p>Sun gravity multiplier: {{ (2 * sunGravity).toFixed(1) }}</p>
+        <input class="slider" type="range" min="0" max="5" step="0.1" style="margin-bottom: 20px"
           v-model="sunGravity" v-on:input="updateSunGravity" />
         </div>
     </div>
@@ -125,7 +125,7 @@ export default class Tripping extends TrippingProps {
   }
 
   updateSunGravity(event) {
-    this.sun.gravity = Number(event.target.value) * 3;
+    this.sun.gravity = Number(event.target.value) * 2;
   }
 
   setup() {
