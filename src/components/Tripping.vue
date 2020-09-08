@@ -109,21 +109,6 @@ export default class Tripping extends TrippingProps {
     window.removeEventListener('resize', this.onWindowResize, false);
   }
 
-  updateExposure(event) {
-    this.exposure = Number(event.target.value);
-    this.renderer.toneMappingExposure = this.exposure ** 4.0;
-  }
-
-  updateStrength(event) {
-    this.bloomStrength = Number(event.target.value);
-    this.bloomPass.strength = this.bloomStrength;
-  }
-
-  updateRadius(event) {
-    this.bloomRadius = Number(event.target.value);
-    this.bloomPass.radius = this.bloomRadius;
-  }
-
   updateSunGravity(event) {
     this.sun.gravity = Number(event.target.value) * 2;
   }

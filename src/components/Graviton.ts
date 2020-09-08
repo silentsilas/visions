@@ -1,5 +1,4 @@
-import { Object3D, Vector3, Clock, Mesh, AudioListener, PositionalAudio, AudioLoader } from 'three';
-import * as Tone from 'tone';
+import { Object3D, Vector3, Clock, Mesh, AudioListener, PositionalAudio } from 'three';
 
 interface AudioBufferNodeSourceShim extends OscillatorNode {
   buffer: any;
